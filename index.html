@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARK Loots</title>
+<style>
+:root {
+  --bg: #ECF0ED; --surface: #F8FAF8; --fg: #14201C; --muted: #536760; --line: #C7D3CD;
+  --accent: #0B7A6B; --accent-fg: #FFFFFF; --warn-bg: #F8EDCF; --warn-fg: #5A4200;
+  --danger: #B3372F; --ok: #1E7F46; --code-bg: #10201C; --code-fg: #CDEFE3;
+  --q0: #E9EEEB; --q1: #3FA34D; --q2: #3A80D4; --q3: #8B58CF; --q4: #D6A216; --q5: #D04840;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F1815; --surface: #17231F; --fg: #E3EEE9; --muted: #94ABA3; --line: #2B3C36;
+    --accent: #4FD1B5; --accent-fg: #07211B; --warn-bg: #3A2F10; --warn-fg: #F0D58A;
+    --danger: #F08078; --ok: #6FD39A; --code-bg: #0A1311; --q0: #D5DDD9;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+}
+main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+h1, h2, h3 { margin: 0; letter-spacing: .01em; }
+h1 { font-size: 1.7rem; }
+h2 { font-size: 1.1rem; display: flex; gap: 10px; align-items: baseline; }
+h3 { font-size: 1rem; }
+p { margin: 0; }
+.n { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+.muted { color: var(--muted); font-size: .85rem; }
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel, .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+label { display: flex; flex-direction: column; gap: 5px; font-size: .82rem; font-weight: 600; color: var(--muted); min-width: 0; }
+input[type=text], input[type=password], input[type=number], select {
+  font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 4px; padding: 10px; width: 100%; min-width: 0;
+}
+button {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 4px; padding: 10px 14px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg); min-height: 42px;
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.danger { color: var(--danger); border-color: var(--danger); }
+button:disabled { opacity: .45; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.row > label { flex: 1 1 200px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.check { flex-direction: row; align-items: center; gap: 10px; font-weight: 500; color: var(--fg); }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.notice { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; padding: 10px 12px; font-size: .86rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; }
+.chip[aria-pressed=true] { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 1px solid var(--line); flex: none; }
+.srv { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.srv:first-child { border-top: 0; }
+.srv input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+.srv div { min-width: 0; }
+.srv b { display: block; overflow-wrap: anywhere; }
+.card-h { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.card-h code { display: block; font-size: .74rem; color: var(--muted); overflow-wrap: anywhere; }
+.tiers { display: flex; gap: 8px; flex-wrap: wrap; }
+.tier { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; background: var(--c); border: 2px solid var(--line); }
+.tier[aria-pressed=true] { border-color: var(--fg); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--fg); }
+.qh { display: flex; justify-content: space-between; font-size: .82rem; font-weight: 600; color: var(--muted); gap: 8px; }
+textarea, pre {
+  width: 100%; background: var(--code-bg); color: var(--code-fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 12px; font: .76rem/1.55 var(--mono); white-space: pre; overflow-x: auto; margin: 0;
+}
+textarea { min-height: 200px; resize: vertical; }
+pre { min-height: 90px; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ok { color: var(--ok); } .err { color: var(--danger); }
+.empty { border: 1px dashed var(--line); border-radius: 6px; padding: 16px; text-align: center; color: var(--muted); }
+@media (max-width: 480px) { .grid3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>ARK Loots</h1>
+    <p class="muted">ARK Survival Ascended sur Nitrado : modifie les loots et envoie-les sur un ou plusieurs serveurs.</p>
+  </header>
+
+  <section aria-labelledby="h1">
+    <h2 id="h1"><span class="n">1</span> Connexion Nitrado</h2>
+    <div class="panel">
+      <label for="token">Jeton Nitrado (longue durée, droit « service »)
+        <input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </label>
+      <div class="row">
+        <button type="button" id="connect" class="primary">Se connecter</button>
+        <button type="button" id="forget">Oublier le jeton</button>
+      </div>
+      <p class="muted" id="conn-msg" role="status">Le jeton reste sur cette tablette et ne part que vers api.nitrado.net.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h2">
+    <h2 id="h2"><span class="n">2</span> Serveurs</h2>
+    <div class="panel" id="servers"><p class="empty">Connecte-toi pour voir tes serveurs.</p></div>
+  </section>
+
+  <section aria-labelledby="h3">
+    <h2 id="h3"><span class="n">3</span> Où le loot est disponible</h2>
+    <div class="panel">
+      <label for="from">Disponible à partir de la balise
+        <select id="from">
+          <option value="3">Blanche (niveau 3)</option>
+          <option value="15">Verte (niveau 15)</option>
+          <option value="25">Bleue (niveau 25)</option>
+          <option value="35">Violette (niveau 35)</option>
+          <option value="45">Jaune (niveau 45)</option>
+          <option value="60">Rouge (niveau 60)</option>
+        </select>
+      </label>
+      <p class="muted">Ce choix coche la balise choisie et toutes celles au-dessus. Tu peux ensuite en cocher ou décocher une par une. Les couleurs sont indicatives.</p>
+      <div class="chips" id="levels"></div>
+      <label class="check" for="dbl"><input id="dbl" type="checkbox"> Inclure aussi les caisses « double »</label>
+      <p class="muted">Grottes (palier 1 à 4)</p>
+      <div class="chips" id="caves"></div>
+      <div class="notice">Pour chaque caisse cochée, le contenu d’origine est remplacé : seuls les objets de ta liste pourront tomber.</div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h4">
+    <h2 id="h4"><span class="n">4</span> Contenu</h2>
+    <div id="items"></div>
+    <div class="panel">
+      <div class="row">
+        <label for="preset">Ajouter un objet<select id="preset"></select></label>
+        <button type="button" id="add-preset" class="primary">Ajouter</button>
+      </div>
+      <div class="row">
+        <label for="custom">Ou un code d’objet<input id="custom" type="text" placeholder="PrimalItem_WeaponTekRifle_C" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <button type="button" id="add-custom">Ajouter</button>
+      </div>
+      <p class="muted" id="custom-msg" role="status"></p>
+      <div class="grid2">
+        <label for="nmin">Objets par caisse (min)<input id="nmin" type="number" min="1" step="1"></label>
+        <label for="nmax">Objets par caisse (max)<input id="nmax" type="number" min="1" step="1"></label>
+      </div>
+      <p class="muted">Les codes d’objets sont ceux que je connais, vérifie-les sur arkcodes.com si un objet n’apparaît pas en jeu.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h5">
+    <h2 id="h5"><span class="n">5</span> Envoi</h2>
+    <div class="panel">
+      <label class="check" for="restart"><input id="restart" type="checkbox"> Redémarrer les serveurs après l’envoi</label>
+      <button type="button" id="deploy" class="primary">Envoyer sur les serveurs cochés</button>
+      <div id="confirm" class="panel" hidden>
+        <p id="confirm-t"></p>
+        <p class="muted">Game.ini est copié à côté sous le nom « Game.ini.sauvegarde-… » avant d’être remplacé.</p>
+        <div class="row">
+          <button type="button" id="go" class="primary">Confirmer</button>
+          <button type="button" id="cancel">Annuler</button>
+        </div>
+      </div>
+      <pre id="log" aria-live="polite">Aucun envoi pour l’instant.</pre>
+    </div>
+    <details>
+      <summary class="muted">Lignes générées (pour copier à la main)</summary>
+      <textarea id="out" readonly spellcheck="false" aria-label="Lignes générées"></textarea>
+      <div class="row"><button type="button" id="copy">Copier</button><span class="muted" id="copy-msg" role="status"></span></div>
+    </details>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var API = 'https://api.nitrado.net';
+  var SECTION = '[/script/shootergame.shootergamemode]';
+  var KEY = 'ConfigOverrideSupplyCrateItems=';
+  var LEVELS = [[3, 'blanche', 0], [15, 'verte', 1], [25, 'bleue', 2], [35, 'violette', 3], [45, 'jaune', 4], [60, 'rouge', 5]];
+  var TIERS = [
+    { n: 'blanc', en: 'Primitive', lo: 0, hi: 0.9 }, { n: 'vert', en: 'Ramshackle', lo: 1, hi: 2.4 },
+    { n: 'bleu', en: 'Apprentice', lo: 2.5, hi: 4.4 }, { n: 'violet', en: 'Journeyman', lo: 4.5, hi: 6.9 },
+    { n: 'jaune', en: 'Mastercraft', lo: 7, hi: 9.9 }, { n: 'rouge', en: 'Ascendant', lo: 10, hi: 12 }
+  ];
+  var PRESETS = [
+    ['PrimalItemStructure_TurretTek_C', 'Tourelle Tek', 'structure'],
+    ['PrimalItemStructure_TurretHeavy_C', 'Tourelle lourde', 'structure'],
+    ['PrimalItemStructure_Turret_C', 'Tourelle automatique', 'structure'],
+    ['PrimalItemStructure_TurretRocket_C', 'Tourelle à roquettes', 'structure'],
+    ['PrimalItemStructure_TurretPlant_C', 'Tourelle plante (Species X)', 'structure'],
+    ['PrimalItemStructure_TekGenerator_C', 'Générateur Tek', 'structure'],
+    ['PrimalItemStructure_TekShield_C', 'Bouclier Tek', 'structure'],
+    ['PrimalItemResource_Element_C', 'Élément', 'item'],
+    ['PrimalItemResource_ElementShard_C', 'Fragment d’élément', 'item'],
+    ['PrimalItemResource_MetalIngot_C', 'Lingot de métal', 'item'],
+    ['PrimalItem_WeaponTekRifle_C', 'Fusil Tek', 'item'],
+    ['PrimalItem_WeaponTekSword_C', 'Épée Tek', 'item'],
+    ['PrimalItem_WeaponEmptyCryopod_C', 'Cryopod vide', 'item']
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
+  function f(n) { return Number.isInteger(n) ? n.toFixed(1) : String(Math.round(n * 100) / 100); }
+  function tierOf(v) { var t = 0; TIERS.forEach(function (x, i) { if (v >= x.lo) t = i; }); return t; }
+
+  // ---------- état ----------
+  var token = store.get('token', '');
+  var services = [];
+  var selected = store.get('sel', []);
+  var paths = store.get('paths', {});
+  var uid = 0;
+  var cfg = store.get('cfg', null) || {
+    levels: [15, 25, 35, 45, 60], dbl: true, caves: [], nmin: 1, nmax: 2,
+    items: [
+      { cls: 'PrimalItemStructure_TurretTek_C', name: 'Tourelle Tek', kind: 'structure', weight: 1, qmin: 1, qmax: 1, lo: 1, hi: 2.4, bp: false },
+      { cls: 'PrimalItemResource_Element_C', name: 'Élément', kind: 'item', weight: 2, qmin: 20, qmax: 60, lo: 1, hi: 2.4, bp: false }
+    ]
+  };
+  cfg.items.forEach(function (it) { it.u = ++uid; });
+  function save() { store.set('cfg', cfg); store.set('sel', selected); store.set('paths', paths); }
+
+  // ---------- HTTP (natif Capacitor : pas de blocage CORS) ----------
+  async function http(o) {
+    var plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp;
+    var res;
+    if (plugin) {
+      res = await plugin.request({ url: o.url, method: o.method, headers: o.headers || {}, data: o.data, responseType: 'text' });
+      if (res.status >= 400) { var e = new Error('HTTP ' + res.status); e.status = res.status; e.body = res.data; throw e; }
+      return typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+    }
+    var r = await fetch(o.url, { method: o.method, headers: o.headers || {}, body: o.data });
+    var t = await r.text();
+    if (!r.ok) { var e2 = new Error('HTTP ' + r.status); e2.status = r.status; e2.body = t; throw e2; }
+    return t;
+  }
+  async function nit(method, path, query) {
+    var url = API + path + (query ? '?' + new URLSearchParams(query).toString() : '');
+    var txt = await http({ method: method, url: url, headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' } });
+    return txt ? JSON.parse(txt) : {};
+  }
+  async function download(sid, path) {
+    var j = await nit('GET', '/services/' + sid + '/gameservers/file_server/download', { file: path });
+    var t = j.data.token;
+    return http({ method: 'GET', url: t.url, headers: { token: t.token } });
+  }
+  async function upload(sid, path, content) {
+    var i = path.lastIndexOf('/');
+    var j = await nit('POST', '/services/' + sid + '/gameservers/file_server/upload', { path: path.slice(0, i) || '/', file: path.slice(i + 1) });
+    var t = j.data.token;
+    await http({ method: 'POST', url: t.url, headers: { token: t.token, 'Content-Type': 'application/octet-stream' }, data: content });
+  }
+  async function findIni(sid, log) {
+    var q = ['/'], n = 0;
+    while (q.length && n < 150) {
+      var dir = q.shift(); n++;
+      var j;
+      try { j = await nit('GET', '/services/' + sid + '/gameservers/file_server/list', { dir: dir }); } catch (e) { continue; }
+      var es = (j.data && j.data.entries) || [];
+      for (var k = 0; k < es.length; k++) {
+        var e = es[k];
+        var p = e.path || (dir.replace(/\/$/, '') + '/' + e.name);
+        if (e.type === 'dir') { if (/arksa|shootergame|saved|config|windowsserver/i.test(p)) q.unshift(p); else q.push(p); }
+        else if (e.name === 'Game.ini') return p;
+      }
+      if (n % 10 === 0) log('  recherche de Game.ini… ' + n + ' dossiers');
+    }
+    return null;
+  }
+
+  // ---------- connexion / serveurs ----------
+  async function connect() {
+    var t = $('token').value.trim() || token;
+    if (!t) { $('conn-msg').textContent = 'Colle ton jeton d’abord.'; return; }
+    token = t;
+    $('conn-msg').textContent = 'Connexion…';
+    try {
+      var j = await nit('GET', '/services');
+      services = ((j.data && j.data.services) || []).filter(function (s) { return s.type === 'gameserver'; });
+      store.set('token', token);
+      $('token').value = '';
+      $('conn-msg').textContent = services.length + ' serveur(s) trouvé(s).';
+      renderServers();
+    } catch (e) {
+      $('conn-msg').textContent = e.status === 401 ? 'Jeton refusé. Vérifie qu’il a le droit « service ».' : 'Échec : ' + e.message;
+    }
+  }
+  function renderServers() {
+    var box = $('servers');
+    if (!services.length) { box.innerHTML = '<p class="empty">Aucun serveur de jeu sur ce compte.</p>'; return; }
+    box.innerHTML = services.map(function (s) {
+      var d = s.details || {};
+      var name = d.name || s.comment || ('Service ' + s.id);
+      var game = d.game || s.type_human || '';
+      var on = selected.indexOf(String(s.id)) >= 0;
+      return '<label class="srv check" for="s-' + s.id + '"><input id="s-' + s.id + '" type="checkbox" data-sid="' + s.id + '"' + (on ? ' checked' : '') + '>' +
+        '<div><b>' + esc(name) + '</b><span class="muted">' + esc(game) + ' · n° ' + s.id + '</span></div></label>';
+    }).join('');
+  }
+  $('servers').addEventListener('change', function (e) {
+    var sid = e.target.getAttribute('data-sid');
+    if (!sid) return;
+    selected = selected.filter(function (x) { return x !== sid; });
+    if (e.target.checked) selected.push(sid);
+    save();
+  });
+  $('connect').addEventListener('click', connect);
+  $('forget').addEventListener('click', function () {
+    token = ''; services = []; store.del('token'); paths = {}; store.del('paths');
+    $('conn-msg').textContent = 'Jeton oublié.'; renderServers();
+    $('servers').innerHTML = '<p class="empty">Connecte-toi pour voir tes serveurs.</p>';
+  });
+
+  // ---------- loots ----------
+  function renderChips() {
+    $('levels').innerHTML = LEVELS.map(function (l) {
+      return '<button type="button" class="chip" data-lvl="' + l[0] + '" aria-pressed="' + (cfg.levels.indexOf(l[0]) >= 0) + '"><span class="dot" style="--c:var(--q' + l[2] + ')"></span>' + l[1] + ' · ' + l[0] + '</button>';
+    }).join('');
+    $('caves').innerHTML = [1, 2, 3, 4].map(function (t) {
+      return '<button type="button" class="chip" data-cave="' + t + '" aria-pressed="' + (cfg.caves.indexOf(t) >= 0) + '">Grotte ' + t + '</button>';
+    }).join('');
+    $('dbl').checked = !!cfg.dbl;
+    $('nmin').value = cfg.nmin; $('nmax').value = cfg.nmax;
+  }
+  $('levels').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-lvl]'); if (!b) return;
+    var l = Number(b.getAttribute('data-lvl')), i = cfg.levels.indexOf(l);
+    if (i >= 0) cfg.levels.splice(i, 1); else cfg.levels.push(l);
+    renderChips(); refresh();
+  });
+  $('caves').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cave]'); if (!b) return;
+    var t = Number(b.getAttribute('data-cave')), i = cfg.caves.indexOf(t);
+    if (i >= 0) cfg.caves.splice(i, 1); else cfg.caves.push(t);
+    renderChips(); refresh();
+  });
+  $('from').addEventListener('change', function () {
+    var min = Number($('from').value);
+    cfg.levels = LEVELS.map(function (l) { return l[0]; }).filter(function (l) { return l >= min; });
+    renderChips(); refresh();
+  });
+  $('dbl').addEventListener('change', function () { cfg.dbl = $('dbl').checked; refresh(); });
+  $('nmin').addEventListener('input', function () { cfg.nmin = num($('nmin').value, 1); refresh(); });
+  $('nmax').addEventListener('input', function () { cfg.nmax = num($('nmax').value, 1); refresh(); });
+
+  function qualityHTML(it) {
+    var u = it.u, t = tierOf(it.lo), th = tierOf(it.hi);
+    var pressed = t === th ? t : -1;
+    var btns = TIERS.map(function (x, i) {
+      return '<button type="button" class="tier" data-act="tier" data-tier="' + i + '" style="--c:var(--q' + i + ')" aria-pressed="' + (i === pressed) + '" aria-label="Qualité ' + x.n + '"></button>';
+    }).join('');
+    return '<div class="qh"><span>Couleur de qualité</span><span>' + TIERS[t].n + (t === th ? '' : ' → ' + TIERS[th].n) + '</span></div>' +
+      '<div class="tiers">' + btns + '</div>' +
+      '<div class="grid2"><label for="lo-' + u + '">Qualité min<input id="lo-' + u + '" type="number" min="0" max="20" step="0.1" value="' + it.lo + '" data-k="lo"></label>' +
+      '<label for="hi-' + u + '">Qualité max<input id="hi-' + u + '" type="number" min="0" max="20" step="0.1" value="' + it.hi + '" data-k="hi"></label></div>';
+  }
+  function renderItems() {
+    var box = $('items');
+    if (!cfg.items.length) { box.innerHTML = '<p class="empty">La liste est vide. Ajoute un objet ci-dessous.</p>'; return; }
+    box.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px">' + cfg.items.map(function (it) {
+      var u = it.u;
+      return '<article class="card" data-u="' + u + '"><header class="card-h"><div><h3>' + esc(it.name) + '</h3><code>' + esc(it.cls) + '</code></div>' +
+        '<button type="button" data-act="rm" aria-label="Retirer ' + esc(it.name) + '">Retirer</button></header>' +
+        '<div class="grid3"><label for="w-' + u + '">Poids<input id="w-' + u + '" type="number" min="0.1" step="0.1" value="' + it.weight + '" data-k="weight"></label>' +
+        '<label for="qa-' + u + '">Quantité min<input id="qa-' + u + '" type="number" min="1" step="1" value="' + it.qmin + '" data-k="qmin"></label>' +
+        '<label for="qb-' + u + '">Quantité max<input id="qb-' + u + '" type="number" min="1" step="1" value="' + it.qmax + '" data-k="qmax"></label></div>' +
+        (it.kind === 'structure' ? '<p class="muted">Les structures n’ont pas de couleur de qualité.</p>' : qualityHTML(it)) +
+        '<label class="check" for="bp-' + u + '"><input id="bp-' + u + '" type="checkbox" data-k="bp"' + (it.bp ? ' checked' : '') + '> Donner le plan (blueprint)</label></article>';
+    }).join('') + '</div>';
+  }
+  function itemOf(el) {
+    var c = el.closest('[data-u]'); if (!c) return null;
+    var u = Number(c.getAttribute('data-u'));
+    for (var i = 0; i < cfg.items.length; i++) if (cfg.items[i].u === u) return i;
+    return null;
+  }
+  $('items').addEventListener('input', function (e) {
+    var k = e.target.getAttribute('data-k'), i = itemOf(e.target);
+    if (!k || i === null) return;
+    if (k === 'bp') cfg.items[i].bp = e.target.checked; else cfg.items[i][k] = num(e.target.value, cfg.items[i][k]);
+    refresh();
+  });
+  $('items').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var i = itemOf(b); if (i === null) return;
+    if (b.getAttribute('data-act') === 'rm') cfg.items.splice(i, 1);
+    else { var t = TIERS[Number(b.getAttribute('data-tier'))]; cfg.items[i].lo = t.lo; cfg.items[i].hi = t.hi; }
+    renderItems(); refresh();
+  });
+  function addItem(cls, name, kind) {
+    cfg.items.push({ u: ++uid, cls: cls, name: name, kind: kind, weight: 1, qmin: 1, qmax: 1, lo: 1, hi: 2.4, bp: false });
+    renderItems(); refresh();
+  }
+  PRESETS.forEach(function (p, i) { var o = document.createElement('option'); o.value = i; o.textContent = p[1]; $('preset').appendChild(o); });
+  $('add-preset').addEventListener('click', function () { var p = PRESETS[Number($('preset').value)]; addItem(p[0], p[1], p[2]); });
+  $('add-custom').addEventListener('click', function () {
+    var v = $('custom').value.trim();
+    if (!/^[A-Za-z0-9_]+$/.test(v)) { $('custom-msg').textContent = 'Lettres, chiffres et tirets bas seulement.'; return; }
+    if (!/_C$/.test(v)) v += '_C';
+    $('custom-msg').textContent = ''; $('custom').value = '';
+    addItem(v, v.replace(/_C$/, ''), 'item');
+  });
+
+  function crates() {
+    var out = [];
+    cfg.levels.slice().sort(function (a, b) { return a - b; }).forEach(function (l) {
+      var p = 'SupplyCrate_Level' + (l < 10 ? '0' + l : l);
+      out.push(p + '_C'); if (cfg.dbl) out.push(p + '_Double_C');
+    });
+    cfg.caves.slice().sort().forEach(function (t) { out.push('SupplyCrate_Cave_QualityTier' + t + '_C'); });
+    return out;
+  }
+  function buildLines() {
+    var n = cfg.items.length;
+    if (!n) return [];
+    var minN = Math.min(n, Math.max(1, Math.round(cfg.nmin || 1)));
+    var maxN = Math.min(n, Math.max(minN, Math.round(cfg.nmax || minN)));
+    var entries = cfg.items.map(function (it) {
+      var st = it.kind === 'structure';
+      var lo = st ? 0 : Math.max(0, it.lo), hi = st ? 0 : Math.max(lo, it.hi);
+      var qa = Math.max(1, Math.round(it.qmin) || 1), qb = Math.max(qa, Math.round(it.qmax) || qa);
+      return '(EntryWeight=' + f(Math.max(0.1, it.weight)) + ',ItemClassStrings=("' + it.cls + '"),ItemsWeights=(1.0),MinQuantity=' + qa + ',MaxQuantity=' + qb +
+        ',MinQuality=' + f(lo) + ',MaxQuality=' + f(hi) + ',bForceBlueprint=' + (it.bp ? 'true' : 'false') + ',ChanceToBeBlueprintOverride=0.0,ItemStatClampsMultiplier=1.0)';
+    }).join(',');
+    return crates().map(function (c) {
+      return KEY + '(SupplyCrateClassString="' + c + '",MinItemSets=1,MaxItemSets=1,NumItemSetsPower=1.0,bSetsRandomWithoutReplacement=true,' +
+        'ItemSets=((SetName="Loots personnalises",MinNumItems=' + minN + ',MaxNumItems=' + maxN + ',NumItemsPower=1.0,SetWeight=1.0,bItemsRandomWithoutReplacement=true,ItemEntries=(' + entries + '))))';
+    });
+  }
+  function refresh() {
+    save();
+    var lines = buildLines();
+    $('out').value = lines.length ? SECTION + '\n' + lines.join('\n') : '';
+    $('deploy').disabled = !lines.length;
+  }
+
+  // ---------- fusion Game.ini ----------
+  function crateOf(l) { var m = /SupplyCrateClassString="([^"]+)"/.exec(l); return m ? m[1] : null; }
+  function merge(cur, lines) {
+    var eol = cur.indexOf('\r\n') >= 0 ? '\r\n' : '\n';
+    var a = cur.split(/\r?\n/);
+    if (a.length && a[a.length - 1] === '') a.pop();
+    var set = {};
+    lines.forEach(function (l) { set[crateOf(l)] = true; });
+    a = a.filter(function (l) { return !(l.trim().indexOf(KEY) === 0 && set[crateOf(l)]); });
+    var i = a.findIndex(function (l) { return l.trim().toLowerCase() === SECTION; });
+    if (i < 0) { if (a.length && a[a.length - 1].trim()) a.push(''); a.push(SECTION); a = a.concat(lines); }
+    else { a.splice.apply(a, [i + 1, 0].concat(lines)); }
+    return a.join(eol) + eol;
+  }
+
+  // ---------- envoi ----------
+  function log(s) { var l = $('log'); l.textContent += (l.textContent ? '\n' : '') + s; l.scrollTop = l.scrollHeight; }
+  function nameOf(sid) {
+    for (var i = 0; i < services.length; i++) if (String(services[i].id) === sid) { var d = services[i].details || {}; return d.name || services[i].comment || ('Service ' + sid); }
+    return 'Service ' + sid;
+  }
+  async function deployOne(sid, lines, restart) {
+    log('— ' + nameOf(sid));
+    var path = paths[sid];
+    if (!path) {
+      log('  recherche de Game.ini…');
+      path = await findIni(sid, log);
+      if (!path) throw new Error('Game.ini introuvable sur ce serveur');
+      paths[sid] = path; save();
+    }
+    log('  fichier : ' + path);
+    var cur = '';
+    try { cur = await download(sid, path); } catch (e) { if (e.status !== 404) throw e; log('  Game.ini absent, il sera créé.'); }
+    cur = cur.replace(/^﻿/, '');
+    if (cur) {
+      var d = new Date(), p2 = function (x) { return (x < 10 ? '0' : '') + x; };
+      var stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds());
+      await upload(sid, path + '.sauvegarde-' + stamp, cur);
+      log('  sauvegarde créée.');
+    }
+    await upload(sid, path, merge(cur, lines));
+    log('  Game.ini envoyé ✓');
+    if (restart) { await nit('POST', '/services/' + sid + '/gameservers/restart'); log('  redémarrage demandé ✓'); }
+  }
+  $('deploy').addEventListener('click', function () {
+    if (!token) { log('Connecte-toi d’abord.'); return; }
+    if (!selected.length) { log('Coche au moins un serveur.'); return; }
+    var names = selected.map(nameOf).join(', ');
+    $('confirm-t').textContent = 'Modifier ' + crates().length + ' caisse(s) sur : ' + names + (' ' + ($('restart').checked ? 'Puis redémarrage.' : 'Sans redémarrage.'));
+    $('confirm').hidden = false;
+  });
+  $('cancel').addEventListener('click', function () { $('confirm').hidden = true; });
+  $('go').addEventListener('click', async function () {
+    $('confirm').hidden = true;
+    var lines = buildLines(), restart = $('restart').checked, ids = selected.slice();
+    $('go').disabled = $('deploy').disabled = true;
+    $('log').textContent = '';
+    for (var i = 0; i < ids.length; i++) {
+      try { await deployOne(ids[i], lines, restart); }
+      catch (e) { log('  ✗ ' + e.message + (e.body ? ' ' + String(e.body).slice(0, 160) : '')); }
+    }
+    log('Terminé.');
+    $('go').disabled = false; $('deploy').disabled = !buildLines().length;
+  });
+
+  $('copy').addEventListener('click', function () {
+    var ta = $('out');
+    var fallback = function () { ta.focus(); ta.select(); $('copy-msg').textContent = 'Texte sélectionné, copie-le avec le menu.'; };
+    try { navigator.clipboard.writeText(ta.value).then(function () { $('copy-msg').textContent = 'Copié.'; }, fallback); } catch (e) { fallback(); }
+  });
+
+  // ---------- démarrage ----------
+  renderChips(); renderItems(); refresh();
+  if (token) { $('conn-msg').textContent = 'Jeton enregistré, reconnexion…'; connect(); }
+})();
+</script>
+</body>
+</html>

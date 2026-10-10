@@ -1,0 +1,13 @@
+{
+  "appId": "com.arkloots.manager",
+  "appName": "ARK Loots",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
